@@ -1,8 +1,23 @@
-export type ModelProvider = 'anthropic' | 'mistralai' | 'openai' | 'moonshot' | 'ollama' | 'bedrock'
+/**
+ * The transports that actually carry a request. Exactly three: OpenRouter
+ * routes every hosted model, Bedrock is BYOK-direct, Ollama is local.
+ */
+export type ModelTransport = 'openrouter' | 'bedrock' | 'ollama'
+
+/**
+ * @deprecated Alias of {@link ModelTransport}, kept so existing call sites keep
+ * compiling. The vendor brands ('anthropic' | 'mistralai' | 'openai' |
+ * 'moonshot') are gone: every hosted model reaches us through OpenRouter, so
+ * there is nothing left for a brand to select. Prefer `ModelTransport`.
+ */
+export type ModelProvider = ModelTransport
 
 export interface ModelSelection {
+  /** Display brand. */
   provider: ModelProvider
   modelId: string
+  /** The transport that carries the request; wins over `provider`. */
+  routeProvider?: ModelTransport
 }
 
 /**
@@ -10,13 +25,7 @@ export interface ModelSelection {
  */
 export interface IUserApiKeyConfig {
   useOwnKeys: boolean
-  anthropicApiKey?: string
-  mistralApiKey?: string
-  openaiApiKey?: string
-  moonshotApiKey?: string
-  // AWS Bedrock API key (bearer token) for the `bedrock` provider. Bedrock has
-  // no Remix proxy, so this is always user-provided. The key is region-scoped
-  // at creation (see DEFAULT_BEDROCK_REGION in ModelFactory).
+  openrouterApiKey?: string
   bedrockBearerToken?: string
 }
 
@@ -27,32 +36,12 @@ export function isUsingOwnKeyForProvider(
   if (!keys) return false
   switch (provider) {
   case 'bedrock':
-    // Bedrock has no proxy — a configured key means own-key, always.
     return !!keys.bedrockBearerToken
-  case 'anthropic':
-    return !!(keys.useOwnKeys && keys.anthropicApiKey)
-  case 'mistralai':
-    return !!(keys.useOwnKeys && keys.mistralApiKey)
-  case 'openai':
-    return !!(keys.useOwnKeys && keys.openaiApiKey)
-  case 'moonshot':
-    return !!(keys.useOwnKeys && keys.moonshotApiKey)
+  case 'openrouter':
+    return !!(keys.useOwnKeys && keys.openrouterApiKey)
   default:
     return false
   }
-}
-
-/**
- * Auto model selection configuration
- */
-export interface IAutoModelConfig {
-  enabled: boolean
-  fallbackModel?: {
-    provider: ModelProvider
-    modelId: string
-  }
-  securityKeywords?: string[]
-  complexityThreshold?: number
 }
 
 /**
@@ -67,7 +56,6 @@ export interface IDeepAgentConfig {
   timeout: number
   enableSubagents: boolean
   enablePlanning: boolean
-  autoMode?: IAutoModelConfig
 }
 
 /**
@@ -87,6 +75,8 @@ export enum DeepAgentErrorType {
   AUTHENTICATION_FAILED = 'authentication_failed',
   QUOTA_EXCEEDED = 'quota_exceeded',
   MODEL_OVERLOADED = 'model_overloaded',
+  CONTENT_BLOCKED = 'content_blocked',
+  TOOL_USE_UNSUPPORTED = 'tool_use_unsupported',
   UNKNOWN = 'unknown'
 }
 
