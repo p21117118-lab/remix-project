@@ -70,10 +70,10 @@
     "@remixproject/plugin": "0.3.44",
     "@remixproject/plugin-api": "^0.3.44",
     "@remixproject/plugin-electron": "0.3.44",
-    "@types/ws": "^8.5.13",
+    "@types/ws": "^8.18.1",
     "@vscode/ripgrep": "^1.15.6",
     "add": "^2.0.6",
-    "axios": "^1.8.2",
+    "axios": "^1.18.0",
     "byline": "^5.0.0",
     "cbor": "^10.0.3",
     "chokidar": "^3.5.3",
@@ -89,7 +89,7 @@
     "octokit": "^3.1.2",
     "puppeteer": "^24.3.0",
     "semver": "^7.5.4",
-    "ws": "^8.18.0"
+    "ws": "^8.22.0"
   },
   "optionalDependencies": {
     "@remix-project/remix-ws-templates": "^1.0.27"
